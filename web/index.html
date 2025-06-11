@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bot Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white">
+  <div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-4">Bot Management Dashboard</h1>
+    <div id="server-info" class="mb-4">
+      <h2 class="text-2xl">Server Info</h2>
+      <p id="server-name">Loading...</p>
+      <p id="server-id"></p>
+      <p id="member-count"></p>
+    </div>
+    <div id="welcome-settings" class="mb-4">
+      <h2 class="text-2xl">Welcome Settings</h2>
+      <form id="welcome-form" class="space-y-4">
+        <div>
+          <label for="channelId" class="block">Welcome Channel ID</label>
+          <input type="text" id="channelId" class="bg-gray-800 p-2 rounded w-full" placeholder="Enter channel ID">
+        </div>
+        <div>
+          <label for="message" class="block">Welcome Message</label>
+          <textarea id="message" class="bg-gray-800 p-2 rounded w-full" placeholder="Enter welcome message"></textarea>
+        </div>
+        <div>
+          <label for="image" class="block">Enable Welcome Image</label>
+          <input type="checkbox" id="image" class="bg-gray-800 p-2">
+        </div>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 p-2 rounded">Save Settings</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    async function loadServerInfo(guildId) {
+      const response = await fetch(`/api/settings/${guildId}`);
+      const data = await response.json();
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+      document.getElementById('server-name').textContent = `Name: ${data.guild.name}`;
+      document.getElementById('server-id').textContent = `ID: ${data.guild.id}`;
+      document.getElementById('member-count').textContent = `Members: ${data.guild.memberCount}`;
+      document.getElementById('channelId').value = data.welcome.channelId || '';
+      document.getElementById('message').value = data.welcome.message || '';
+      document.getElementById('image').checked = data.welcome.image || false;
+    }
+
+    document.getElementById('welcome-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const guildId = document.getElementById('server-id').textContent.split(': ')[1];
+      const channelId = document.getElementById('channelId').value;
+      const message = document.getElementById('message').value;
+      const image = document.getElementById('image').checked;
+
+      const response = await fetch(`/api/settings/${guildId}/welcome`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelId, message, image }),
+      });
+      const data = await response.json();
+      alert(data.message);
+    });
+
+    // Replace with your guild ID or get dynamically via OAuth2
+    loadServerInfo('YOUR_GUILD_ID');
+  </script>
+</body>
+</html>
